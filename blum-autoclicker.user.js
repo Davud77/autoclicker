@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Blum Autoclicker
-// @version      2.5
+// @version      2.6
 // @namespace    Violentmonkey Scripts
 // @author       Davud77
 // @match        https://telegram.blum.codes/*
@@ -21,6 +21,7 @@ let GAME_SETTINGS = {
 };
 
 let isGamePaused = false;
+let errorCount = 0; // Добавленный счётчик ошибок
 
 try {
     let gameStats = {
@@ -120,6 +121,13 @@ try {
                 }, getNewGameDelay());
             }
         });
+
+        // Проверка и нажатие на кнопку "Launch Blum"
+        const launchButton = document.querySelector('.new-message-bot-commands.is-view');
+        if (launchButton) {
+            launchButton.click();
+            console.log('Нажата кнопка "Launch Blum" после перезагрузки.');
+        }
     }
 
     function continuousPlayButtonCheck() {
@@ -140,8 +148,16 @@ try {
             const resetButton = errorPage.querySelector('button.reset');
             if (resetButton) {
                 resetButton.click();
-                console.log('Ошибка обнаружена. Нажата кнопка Reset.');
+                errorCount++; // Увеличиваем счётчик ошибок
+                console.log('Ошибка обнаружена. Нажата кнопка Reset. Ошибок подряд: ' + errorCount);
+                if (errorCount > 5) {
+                    console.log('Превышено количество ошибок. Перезагрузка страницы.');
+                    errorCount = 0; // Сброс счётчика перед перезагрузкой
+                    location.reload(); // Перезагружаем страницу
+                }
             }
+        } else {
+            errorCount = 0; // Сброс счётчика ошибок, если ошибки нет
         }
     }
 
@@ -372,6 +388,7 @@ try {
     document.head.appendChild(style);
 
     function createSettingElement(label, id, type, min, max, step, tooltipText) {
+        // Функция остается без изменений
         const container = document.createElement('div');
         container.className = 'setting-item';
 
@@ -465,3 +482,5 @@ try {
 } catch (e) {
     console.error("Blum Autoclicker error:", e);
 }
+
+    
